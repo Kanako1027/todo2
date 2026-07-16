@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>やることリスト</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐻</text></svg>">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; }
+  :root {
+    --bg: #FFF4EF; --card: #FFFFFF; --ink: #5C4A4A; --sub: #B49A9A;
+    --line: #F6DFD6; --pink: #F1789C; --pink-deep: #E25E88; --pink-soft: #FDE9F0;
+    --mint: #6EC49A; --mint-soft: #E7F7EF; --sun: #FFC24B;
+    --peach: #F49B6A; --peach-soft: #FEF0E5;
+  }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 12% 8%, #FFE9F1 0, transparent 26%),
+      radial-gradient(circle at 88% 16%, #FFF3DC 0, transparent 24%),
+      var(--bg);
+    color: var(--ink);
+    font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Yu Gothic', sans-serif;
+    font-weight: 500;
+    padding: 26px 16px 60px;
+  }
+  .inner { max-width: 620px; margin: 0 auto; }
+  .hero {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card); border: 2.5px solid var(--line);
+    border-radius: 24px; padding: 16px 18px; margin-bottom: 18px;
+    box-shadow: 0 4px 0 #F9DCE6;
+  }
+  .hero-mascot { flex-shrink: 0; animation: bob 3.2s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  .hero-body { flex: 1; min-width: 0; }
+  .hero-date { font-size: 13px; color: var(--sub); font-weight: 700; letter-spacing: .06em; }
+  .bubble {
+    position: relative; display: inline-block;
+    background: var(--pink-soft); color: var(--pink-deep);
+    font-weight: 900; font-size: 15px; border-radius: 14px;
+    padding: 7px 13px; margin: 5px 0 10px;
+  }
+  .bubble::before {
+    content: ""; position: absolute; left: -7px; top: 50%; transform: translateY(-50%);
+    border: 6px solid transparent; border-right-color: var(--pink-soft); border-left: 0;
+  }
+  .meter-row { display: flex; align-items: center; gap: 10px; }
+  .meter { flex: 1; height: 16px; border-radius: 99px; background: #FBEAE2; overflow: hidden; border: 2px solid var(--line); }
+  .meter-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #FFB3C9, var(--pink)); transition: width .5s cubic-bezier(.34,1.56,.64,1); }
+  .meter-pct { font-size: 13px; font-weight: 900; color: var(--pink-deep); min-width: 64px; text-align: right; }
+  .add {
+    display: flex; gap: 8px; background: var(--card);
+    border: 2.5px solid var(--line); border-radius: 18px;
+    padding: 8px; margin-bottom: 28px; align-items: center;
+    box-shadow: 0 4px 0 #F9DCE6;
+  }
+  .add input[type=text] {
+    flex: 1; border: none; outline: none; font: inherit; font-size: 16px;
+    background: transparent; color: var(--ink); min-width: 0; padding: 6px 10px;
+  }
+  .add input[type=text]::placeholder { color: #D9BFBF; }
+  .add input[type=date] {
+    border: 2px solid var(--line); border-radius: 12px; font: inherit;
+    font-size: 12px; color: var(--sub); padding: 6px 6px; background: #FFF9F6; max-width: 118px;
+  }
+  .add button {
+    border: none; background: var(--pink); color: #fff; font: inherit;
+    font-weight: 900; font-size: 14px; padding: 9px 16px; border-radius: 13px;
+    cursor: pointer; flex-shrink: 0; box-shadow: 0 3px 0 var(--pink-deep);
+    transition: transform .08s ease;
+  }
+  .add button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--pink-deep); }
+  .sec { margin-bottom: 26px; }
+  .sec-head { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+  .sec-label { font-size: 14px; font-weight: 900; letter-spacing: .1em; color: var(--pink-deep); }
+  .sec-label.accent { color: var(--peach); }
+  .sec-count { font-size: 12px; font-weight: 700; color: var(--pink-deep); background: var(--pink-soft); border-radius: 99px; padding: 1px 9px; }
+  .sec-label.accent + .sec-count { color: var(--peach); background: var(--peach-soft); }
+  .sec-rule { flex: 1; height: 2px; border-radius: 2px; background: var(--line); }
+  .sec-btn { border: none; background: none; font: inherit; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; }
+  .sec-btn:hover { color: var(--pink-deep); }
+  .task-wrap { margin-bottom: 9px; }
+  .task {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card); border: 2px solid var(--line);
+    border-radius: 16px; padding: 12px 13px;
+  }
+  .task.is-done { background: var(--mint-soft); border-color: #D3EDDE; }
+  .task.is-done .task-title { text-decoration: line-through; color: #9DBFA9; }
+  .check-holder { position: relative; flex-shrink: 0; display: flex; }
+  .check {
+    width: 26px; height: 26px; border-radius: 9px;
+    border: 2.4px solid #EBC6CF; background: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; transition: all .15s ease; padding: 0;
+  }
+  .check.checked { background: var(--mint); border-color: var(--mint); animation: pop .3s ease; }
+  @keyframes pop { 0% { transform: scale(.7); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+  .burst { position: absolute; left: 50%; top: 50%; pointer-events: none; z-index: 5; }
+  .pt { position: absolute; font-size: 13px; animation: fly .7s ease-out forwards; }
+  @keyframes fly {
+    0% { transform: rotate(var(--a)) translateX(2px); opacity: 1; }
+    100% { transform: rotate(var(--a)) translateX(30px); opacity: 0; }
+  }
+  .task-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .task-title { font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
+  .task-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+  .task-meta:empty { display: none; }
+  .badge-overdue { font-size: 11px; color: var(--peach); background: var(--peach-soft); border-radius: 99px; padding: 1px 8px; font-weight: 700; }
+  .badge-defer { font-size: 11px; color: var(--sub); background: #F8ECEC; border-radius: 99px; padding: 1px 8px; font-weight: 700; }
+  .btn-defer {
+    border: 2px solid var(--line); background: #FFF9F6; color: var(--sub);
+    font: inherit; font-weight: 700; font-size: 12px; padding: 5px 11px;
+    border-radius: 99px; cursor: pointer; flex-shrink: 0; white-space: nowrap;
+  }
+  .btn-defer.active, .btn-defer:hover { border-color: var(--pink); color: var(--pink-deep); background: var(--pink-soft); }
+  .btn-del { border: none; background: none; color: #E4C8C8; font-size: 18px; cursor: pointer; padding: 2px 4px; flex-shrink: 0; line-height: 1; }
+  .btn-del:hover { color: var(--peach); }
+  .defer-panel {
+    display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    padding: 10px 13px; margin: 5px 0 2px 36px;
+    background: var(--pink-soft); border-radius: 14px;
+  }
+  .defer-label { font-size: 12px; color: var(--pink-deep); font-weight: 900; margin-right: 2px; }
+  .chip {
+    border: 2px solid #F5C3D4; background: #fff; color: var(--pink-deep);
+    font: inherit; font-weight: 700; font-size: 12.5px; padding: 4px 12px;
+    border-radius: 99px; cursor: pointer;
+  }
+  .chip:hover { background: var(--pink); color: #fff; border-color: var(--pink); }
+  .chip-date { border: 2px solid #F5C3D4; border-radius: 99px; font: inherit; font-size: 12px; color: var(--pink-deep); padding: 3px 8px; background: #fff; }
+  .up-date { font-size: 13px; font-weight: 900; color: var(--pink-deep); margin: 12px 0 7px; }
+  .empty {
+    border: 2.5px dashed var(--line); border-radius: 16px; padding: 20px;
+    text-align: center; font-size: 13.5px; color: var(--sub); font-weight: 700;
+  }
+  .empty strong { color: var(--pink-deep); }
+  button:focus-visible, input:focus-visible { outline: 3px solid #F5A9C4; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="inner">
+  <div class="hero">
+    <div class="hero-mascot" id="mascot"></div>
+    <div class="hero-body">
+      <div class="hero-date" id="heroDate"></div>
+      <div class="bubble" id="bubble"></div>
+      <div class="meter-row">
+        <div class="meter"><div class="meter-fill" id="meterFill" style="width:0%"></div></div>
+        <span class="meter-pct" id="meterPct">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="add">
+    <input type="text" id="newTitle" placeholder="やることを追加…">
+    <input type="date" id="newDate">
+    <button id="addBtn">追加♪</button>
+  </div>
+
+  <div id="sections"></div>
+</div>
+
+<script>
+"use strict";
+// ---------- date helpers ----------
+const pad = n => String(n).padStart(2, "0");
+const toKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const todayKey = () => toKey(new Date());
+const addDays = (key, n) => { const [y,m,d] = key.split("-").map(Number); const dt = new Date(y, m-1, d); dt.setDate(dt.getDate()+n); return toKey(dt); };
+const nextMonday = () => { const d = new Date(); const diff = ((8 - d.getDay()) % 7) || 7; d.setDate(d.getDate()+diff); return toKey(d); };
+const WD = ["日","月","火","水","木","金","土"];
+const fmtJa = key => { const [y,m,d] = key.split("-").map(Number); const dt = new Date(y, m-1, d); return `${m}月${d}日(${WD[dt.getDay()]})`; };
+const fmtRel = key => {
+  const t = todayKey();
+  if (key === t) return "今日";
+  if (key === addDays(t,1)) return "明日";
+  if (key === addDays(t,2)) return "明後日";
+  return fmtJa(key);
+};
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+// ---------- state ----------
+const KEY = "kuma-tasks-v1";
+let tasks = [];
+try { tasks = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch(e) { tasks = []; }
+let deferOpen = null;
+let showDone = true;
+let burstId = null;
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(tasks)); } catch(e) {} };
+
+// ---------- mascot ----------
+function mascotSvg(mood) {
+  const eyes = mood === "party"
+    ? `<path d="M40 54 l3.5 7 7.5 1 -5.5 5.5 1.5 7.5 -7 -4 -7 4 1.5 -7.5 -5.5 -5.5 7.5 -1 z" fill="#FFC24B" stroke="#5A4030" stroke-width="1"/>
+       <path d="M80 54 l3.5 7 7.5 1 -5.5 5.5 1.5 7.5 -7 -4 -7 4 1.5 -7.5 -5.5 -5.5 7.5 -1 z" fill="#FFC24B" stroke="#5A4030" stroke-width="1"/>`
+    : mood === "happy"
+    ? `<path d="M34 60 q6 -8 12 0" fill="none" stroke="#5A4030" stroke-width="3.4" stroke-linecap="round"/>
+       <path d="M74 60 q6 -8 12 0" fill="none" stroke="#5A4030" stroke-width="3.4" stroke-linecap="round"/>`
+    : `<circle cx="40" cy="58" r="4" fill="#5A4030"/><circle cx="80" cy="58" r="4" fill="#5A4030"/>`;
+  const mouth = mood === "party"
+    ? `<path d="M52 82 q8 9 16 0 q-8 4 -16 0" fill="#5A4030"/>`
+    : mood === "happy"
+    ? `<path d="M53 80 q7 7 14 0" fill="none" stroke="#5A4030" stroke-width="3" stroke-linecap="round"/>`
+    : `<path d="M55 81 q5 4 10 0" fill="none" stroke="#5A4030" stroke-width="2.8" stroke-linecap="round"/>`;
+  return `<svg viewBox="0 0 120 122" width="86" height="87" aria-hidden="true">
+    <circle cx="28" cy="26" r="16" fill="#B9885C"/><circle cx="92" cy="26" r="16" fill="#B9885C"/>
+    <circle cx="28" cy="27" r="8" fill="#EBCBA4"/><circle cx="92" cy="27" r="8" fill="#EBCBA4"/>
+    <circle cx="60" cy="62" r="44" fill="#C99A6B" stroke="#B9885C" stroke-width="3"/>
+    <ellipse cx="60" cy="78" rx="19" ry="14" fill="#F3DDBE"/>
+    <ellipse cx="32" cy="70" rx="8" ry="5" fill="#E8A98F" opacity="0.75"/>
+    <ellipse cx="88" cy="70" rx="8" ry="5" fill="#E8A98F" opacity="0.75"/>
+    ${eyes}
+    <ellipse cx="60" cy="73" rx="5" ry="4" fill="#5A4030"/>
+    ${mouth}
+    <rect x="46" y="96" width="28" height="22" rx="10" fill="#E0993F" stroke="#B9772A" stroke-width="2.4"/>
+    <rect x="43" y="92" width="34" height="9" rx="4.5" fill="#C77F2A"/>
+    <ellipse cx="60" cy="93" rx="14" ry="4" fill="#F8C55C"/>
+    <path d="M54 95 q2.6 8 5.2 0" fill="#F8C55C"/><path d="M66 95 q2.4 6 4.8 0" fill="#F8C55C"/>
+    <path d="M53 106 q7 4 14 0" fill="none" stroke="#B9772A" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="43" cy="102" r="8" fill="#C99A6B" stroke="#B9885C" stroke-width="2.4"/>
+    <circle cx="77" cy="102" r="8" fill="#C99A6B" stroke="#B9885C" stroke-width="2.4"/>
+  </svg>`;
+}
+
+// ---------- rendering ----------
+function taskRowHtml(t, overdueRow) {
+  const burst = burstId === t.id
+    ? `<span class="burst" aria-hidden="true">${["🌸","✨","💮","⭐","🎀","✨"].map((e,i)=>`<span class="pt" style="--a:${i*60}deg">${e}</span>`).join("")}</span>`
+    : "";
+  const meta = [
+    overdueRow ? `<span class="badge-overdue">${fmtJa(t.due)}の分</span>` : "",
+    (t.deferCount > 0 && !t.done) ? `<span class="badge-defer">また今度×${t.deferCount}</span>` : ""
+  ].join("");
+  const deferBtn = !t.done
+    ? `<button class="btn-defer${deferOpen===t.id?" active":""}" data-act="defer" data-id="${t.id}">回す ▾</button>` : "";
+  const panel = (deferOpen === t.id && !t.done)
+    ? `<div class="defer-panel">
+        <span class="defer-label">いつにする?</span>
+        <button class="chip" data-act="deferto" data-id="${t.id}" data-date="${addDays(todayKey(),1)}">明日</button>
+        <button class="chip" data-act="deferto" data-id="${t.id}" data-date="${addDays(todayKey(),2)}">明後日</button>
+        <button class="chip" data-act="deferto" data-id="${t.id}" data-date="${nextMonday()}">来週月曜</button>
+        <input type="date" class="chip-date" min="${todayKey()}" data-act="deferdate" data-id="${t.id}">
+      </div>` : "";
+  return `<div class="task-wrap">
+    <div class="task${t.done?" is-done":""}">
+      <span class="check-holder">
+        <button class="check${t.done?" checked":""}" data-act="toggle" data-id="${t.id}" aria-label="${t.done?"未完了に戻す":"完了にする"}">
+          ${t.done?'<svg viewBox="0 0 12 12" width="12" height="12"><path d="M2 6.5 L4.8 9.2 L10 3.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>':""}
+        </button>${burst}
+      </span>
+      <div class="task-main">
+        <span class="task-title">${esc(t.title)}</span>
+        <span class="task-meta">${meta}</span>
+      </div>
+      ${deferBtn}
+      <button class="btn-del" data-act="del" data-id="${t.id}" aria-label="削除">×</button>
+    </div>
+    ${panel}
+  </div>`;
+}
+
+function render() {
+  const t0 = todayKey();
+  const pending = tasks.filter(t => !t.done);
+  const overdue = pending.filter(t => t.due < t0).sort((a,b) => a.due.localeCompare(b.due));
+  const today = pending.filter(t => t.due === t0);
+  const upcoming = pending.filter(t => t.due > t0).sort((a,b) => a.due.localeCompare(b.due));
+  const done = tasks.filter(t => t.done).sort((a,b) => (b.doneAt||0)-(a.doneAt||0));
+
+  const scope = tasks.filter(t => t.due <= t0);
+  const doneN = scope.filter(t => t.done).length;
+  const pct = scope.length === 0 ? 0 : Math.round(doneN/scope.length*100);
+  const allClear = scope.length > 0 && pct === 100;
+  const mood = allClear ? "party" : doneN > 0 ? "happy" : "normal";
+  const msg = scope.length === 0 ? "今日のやること、追加してみよ〜!"
+    : allClear ? "全部できた!今日のきみ、えらすぎる!!"
+    : pct === 0 ? "まずはひとつからいこう♪"
+    : pct < 50 ? "いいスタート!その調子〜!"
+    : "あとちょっと!がんばれ〜!!";
+
+  document.getElementById("mascot").innerHTML = mascotSvg(mood);
+  document.getElementById("heroDate").textContent = fmtJa(t0);
+  document.getElementById("bubble").textContent = msg;
+  document.getElementById("meterFill").style.width = pct + "%";
+  document.getElementById("meterPct").textContent = scope.length === 0 ? "—" : `${doneN}/${scope.length} 達成`;
+
+  let html = "";
+  if (overdue.length) {
+    html += `<section class="sec"><div class="sec-head"><span class="sec-label accent">きのうまでの分</span><span class="sec-count">${overdue.length}</span><span class="sec-rule"></span></div>${overdue.map(t=>taskRowHtml(t,true)).join("")}</section>`;
+  }
+  html += `<section class="sec"><div class="sec-head"><span class="sec-label">きょう</span><span class="sec-count">${today.length}</span><span class="sec-rule"></span></div>`;
+  html += today.length === 0
+    ? `<div class="empty">${allClear ? "きょうの分は<strong>ぜんぶ完了</strong>!ゆっくり休んでね 🍵" : "きょうのタスクはまだないよ。上から追加してね♪"}</div>`
+    : today.map(t=>taskRowHtml(t)).join("");
+  html += `</section>`;
+  if (upcoming.length) {
+    html += `<section class="sec"><div class="sec-head"><span class="sec-label">このさき</span><span class="sec-count">${upcoming.length}</span><span class="sec-rule"></span></div>`;
+    let cur = null;
+    for (const t of upcoming) {
+      if (t.due !== cur) { cur = t.due; html += `<div class="up-date">${fmtRel(cur)}</div>`; }
+      html += taskRowHtml(t);
+    }
+    html += `</section>`;
+  }
+  if (done.length) {
+    html += `<section class="sec"><div class="sec-head"><span class="sec-label">できた!</span><span class="sec-count">${done.length}</span><span class="sec-rule"></span>
+      <button class="sec-btn" data-act="toggledone">${showDone?"隠す":"表示"}</button>
+      <button class="sec-btn" data-act="cleardone">完了分を削除</button></div>`;
+    if (showDone) html += done.map(t=>taskRowHtml(t)).join("");
+    html += `</section>`;
+  }
+  document.getElementById("sections").innerHTML = html;
+}
+
+// ---------- actions ----------
+function addTask() {
+  const input = document.getElementById("newTitle");
+  const title = input.value.trim();
+  if (!title) return;
+  const due = document.getElementById("newDate").value || todayKey();
+  tasks.unshift({ id: uid(), title, due, done: false, deferCount: 0, createdAt: Date.now() });
+  input.value = "";
+  save(); render();
+}
+
+document.getElementById("addBtn").addEventListener("click", addTask);
+document.getElementById("newTitle").addEventListener("keydown", e => { if (e.key === "Enter") addTask(); });
+document.getElementById("newDate").value = todayKey();
+
+document.getElementById("sections").addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  if (act === "toggle") {
+    const t = tasks.find(x => x.id === id);
+    if (!t) return;
+    if (!t.done) { burstId = id; setTimeout(() => { burstId = null; render(); }, 750); }
+    t.done = !t.done;
+    t.doneAt = t.done ? Date.now() : undefined;
+    save(); render();
+  } else if (act === "defer") {
+    deferOpen = deferOpen === id ? null : id; render();
+  } else if (act === "deferto") {
+    const t = tasks.find(x => x.id === id);
+    if (t) { t.due = el.dataset.date; t.deferCount = (t.deferCount||0)+1; }
+    deferOpen = null; save(); render();
+  } else if (act === "del") {
+    tasks = tasks.filter(x => x.id !== id); save(); render();
+  } else if (act === "toggledone") {
+    showDone = !showDone; render();
+  } else if (act === "cleardone") {
+    tasks = tasks.filter(x => !x.done); save(); render();
+  }
+});
+document.getElementById("sections").addEventListener("change", e => {
+  const el = e.target.closest("[data-act='deferdate']");
+  if (!el || !el.value) return;
+  const t = tasks.find(x => x.id === el.dataset.id);
+  if (t) { t.due = el.value; t.deferCount = (t.deferCount||0)+1; }
+  deferOpen = null; save(); render();
+});
+
+render();
+</script>
+</body>
+</html>
